@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Scripts and styles only from this origin; data leaves only for Supabase. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://*.supabase.co; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#561827">
+  <meta name="description" content="Claim your group's slot, rank the capstone questions, and get a fair allocation once all six groups have submitted.">
+  <title>Lindt Capstone · Topic Allocation</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23561827'/%3E%3Crect x='10' y='10' width='12' height='12' rx='2' fill='%23f2c089' transform='rotate(45 16 16)'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="banner banner--setup" id="setup-banner" role="status" hidden>
+    <strong>Setup needed.</strong>
+    Add the Supabase URL and publishable key to <code>js/config.js</code>. Until then this page is read-only.
+  </div>
+  <div class="banner banner--error" id="status-banner" role="status" hidden></div>
+
+  <header class="hero">
+    <div class="hero__ambient" aria-hidden="true">
+      <svg class="hero__ribbons" viewBox="0 0 1200 400" preserveAspectRatio="none" focusable="false">
+        <path class="ribbon ribbon--caramel" d="M-60 300C180 170 380 390 640 250S1040 110 1260 210"/>
+        <path class="ribbon ribbon--rose" d="M-60 120C220 230 420 40 700 150S1020 330 1260 260"/>
+        <path class="ribbon ribbon--ivory" d="M-60 360C260 300 460 200 760 320S1080 240 1260 330"/>
+      </svg>
+      <span class="choc choc--truffle choc--1"></span>
+      <span class="choc choc--bonbon choc--2" data-topic="A"></span>
+      <span class="choc choc--square choc--3"></span>
+      <span class="choc choc--bonbon choc--4" data-topic="B"></span>
+      <span class="choc choc--truffle choc--5"></span>
+      <span class="choc choc--bonbon choc--6" data-topic="C"></span>
+    </div>
+    <div class="hero__inner">
+      <div class="hero__copy">
+        <p class="label">Lindt Capstone</p>
+        <h1 class="hero__title">Topic allocation</h1>
+        <p class="hero__lede">
+          Claim your group's slot and rank the six questions. The allocation is published once all
+          six groups have submitted.
+        </p>
+      </div>
+      <dl class="ledger" aria-label="Deadline and status">
+        <div class="ledger__row" id="deadline-row" hidden>
+          <dt>Deadline</dt>
+          <dd class="ledger__text" id="deadline"></dd>
+        </div>
+        <div class="ledger__row" id="reveal-cta" hidden>
+          <dt>Status</dt>
+          <dd class="ledger__text"><a href="#allocation-title">Allocation complete</a></dd>
+        </div>
+      </dl>
+      <div class="progress">
+        <p class="progress__summary" id="progress-summary">Loading groups…</p>
+        <ol class="progress__slots" id="progress-slots" aria-labelledby="progress-summary"></ol>
+      </div>
+    </div>
+    <svg class="hero__drip" viewBox="0 0 1200 44" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M0 44V14C48 14 48 34 96 34C138 34 138 10 180 10C235 10 235 38 290 38C335 38 335 16 380 16C440 16 440 40 500 40C550 40 550 12 600 12C650 12 650 30 700 30C760 30 760 10 820 10C875 10 875 36 930 36C985 36 985 18 1040 18C1080 18 1080 30 1120 30C1160 30 1160 14 1200 14V44z"/>
+    </svg>
+  </header>
+
+  <main id="main">
+    <section class="section" aria-labelledby="groups-title">
+      <header class="section__head">
+        <p class="section__num" aria-hidden="true">01</p>
+        <h2 id="groups-title">Groups</h2>
+        <p class="section__intro">
+          One representative per group claims a slot and sets a PIN. Rankings are sealed until all
+          six groups have submitted.
+        </p>
+      </header>
+      <div class="section__body">
+        <ol class="slots" id="slots" aria-busy="true"></ol>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="questions-title">
+      <header class="section__head">
+        <p class="section__num" aria-hidden="true">02</p>
+        <h2 id="questions-title">The questions</h2>
+        <p class="section__intro">
+          Three Lindt challenges, each split into an analytical stream and an operational enabler.
+          Every group is allocated exactly one question.
+        </p>
+      </header>
+      <div class="section__body topics" id="topics"></div>
+    </section>
+
+    <section class="section" aria-labelledby="allocation-title">
+      <header class="section__head">
+        <p class="section__num" aria-hidden="true">03</p>
+        <h2 id="allocation-title">Allocation</h2>
+        <p class="section__intro">
+          The allocation minimises the worst choice any group receives, then the total. Every
+          equally fair option is shown.
+        </p>
+      </header>
+      <div class="section__body">
+        <div class="sealed" id="sealed">
+          <p class="label sealed__label" data-icon="lock">Sealed</p>
+          <p class="sealed__title">Rankings are sealed until all six groups have submitted.</p>
+          <p class="sealed__text">
+            No group can see another group's ranking before then, so there is nothing to gain by
+            ranking tactically.
+          </p>
+        </div>
+        <div class="revealed" id="revealed" hidden></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Lindt Capstone · Topic allocation</p>
+    <button type="button" class="link-button" id="admin-link">Admin</button>
+  </footer>
+
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+  <div class="visually-hidden" id="announcer" aria-live="assertive"></div>
+  <canvas class="celebration" id="celebration" aria-hidden="true"></canvas>
+
+  <!-- Claim a slot -->
+  <dialog class="dialog" id="claim-dialog" aria-labelledby="claim-title">
+    <form class="dialog__form" id="claim-form" novalidate>
+      <header class="dialog__head">
+        <p class="label" id="claim-eyebrow">Slot</p>
+        <h2 id="claim-title">Claim this slot</h2>
+        <button type="button" class="icon-button" data-close aria-label="Close" data-icon="close"></button>
+      </header>
+      <div class="dialog__body">
+        <div class="field">
+          <label for="claim-name">Group name</label>
+          <input id="claim-name" name="group_name" type="text" autocomplete="off" required>
+        </div>
+        <div class="field">
+          <label for="claim-members-input">Members</label>
+          <div class="chips" id="claim-members"></div>
+          <p class="hint">Press Enter or comma after each name. Up to 8.</p>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="claim-pin">PIN</label>
+            <input id="claim-pin" type="password" autocomplete="new-password" required>
+          </div>
+          <div class="field">
+            <label for="claim-pin-confirm">Confirm PIN</label>
+            <input id="claim-pin-confirm" type="password" autocomplete="new-password" required>
+          </div>
+        </div>
+        <p class="note">
+          Only your group rep needs this — you'll need it to edit. At least 6 characters.
+        </p>
+        <p class="form-error" role="alert" data-error></p>
+      </div>
+      <footer class="dialog__actions">
+        <button type="button" class="btn btn--secondary" data-close>Cancel</button>
+        <button type="submit" class="btn btn--primary">Claim slot</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- PIN prompt before managing a group -->
+  <dialog class="dialog dialog--narrow" id="pin-dialog" aria-labelledby="pin-title">
+    <form class="dialog__form" id="pin-form" novalidate>
+      <header class="dialog__head">
+        <p class="label" id="pin-eyebrow">Slot</p>
+        <h2 id="pin-title">Enter your PIN</h2>
+        <button type="button" class="icon-button" data-close aria-label="Close" data-icon="close"></button>
+      </header>
+      <div class="dialog__body">
+        <div class="field">
+          <label for="pin-input">Group PIN</label>
+          <input id="pin-input" type="password" autocomplete="current-password" required>
+        </div>
+        <p class="form-error" role="alert" data-error></p>
+      </div>
+      <footer class="dialog__actions">
+        <button type="button" class="btn btn--secondary" data-close>Cancel</button>
+        <button type="submit" class="btn btn--primary">Continue</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Edit a group and its ranking -->
+  <dialog class="dialog dialog--wide" id="editor-dialog" aria-labelledby="editor-title">
+    <div class="dialog__form">
+      <header class="dialog__head">
+        <p class="label" id="editor-eyebrow">Slot</p>
+        <h2 id="editor-title" tabindex="-1">Your group</h2>
+        <button type="button" class="icon-button" data-close aria-label="Close" data-icon="close"></button>
+      </header>
+      <div class="dialog__body" id="editor-body" data-scroll-container>
+        <section class="editor-section" aria-labelledby="ranking-title">
+          <h3 id="ranking-title">Your ranking</h3>
+          <p class="editor-status" id="ranking-status"></p>
+          <p class="hint" id="ranking-help">
+            Rank as many questions as you like, most wanted first. Drag a question by its handle,
+            or use Add, Remove and the arrow buttons. Unranked questions count as equally least
+            wanted. Notes are optional and stay sealed with your ranking; everyone sees them after
+            the reveal.
+          </p>
+          <ol class="rank-list" id="rank-list" aria-labelledby="ranking-title" aria-describedby="ranking-help"></ol>
+          <div class="editor-actions">
+            <span class="dirty-flag" id="ranking-dirty" hidden>Unsaved changes</span>
+            <button type="button" class="btn btn--primary" id="save-ranking">Save ranking</button>
+          </div>
+        </section>
+
+        <form class="editor-section" id="details-form" novalidate aria-labelledby="details-title">
+          <h3 id="details-title">Group details</h3>
+          <div class="field">
+            <label for="editor-name">Group name</label>
+            <input id="editor-name" type="text" autocomplete="off" required>
+          </div>
+          <div class="field">
+            <label for="editor-members-input">Members</label>
+            <div class="chips" id="editor-members"></div>
+            <p class="hint">Press Enter or comma after each name. Up to 8.</p>
+          </div>
+          <div class="editor-actions">
+            <button type="submit" class="btn btn--secondary">Save details</button>
+          </div>
+        </form>
+
+        <p class="form-error" role="alert" data-error></p>
+
+        <section class="editor-section editor-section--danger" aria-labelledby="danger-title">
+          <h3 id="danger-title">Release slot</h3>
+          <p class="hint" id="release-hint">Frees this slot and deletes your group's details and ranking.</p>
+          <button type="button" class="btn btn--danger" id="release-slot">Release slot</button>
+        </section>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Generic confirmation -->
+  <dialog class="dialog dialog--narrow" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+    <form class="dialog__form" id="confirm-form" novalidate>
+      <header class="dialog__head">
+        <h2 id="confirm-title">Are you sure?</h2>
+      </header>
+      <div class="dialog__body">
+        <p id="confirm-message"></p>
+      </div>
+      <footer class="dialog__actions">
+        <button type="button" class="btn btn--secondary" data-close>Cancel</button>
+        <button type="submit" class="btn btn--danger" id="confirm-ok">Confirm</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- Admin reset -->
+  <dialog class="dialog dialog--narrow" id="admin-dialog" aria-labelledby="admin-title">
+    <form class="dialog__form" id="admin-form" novalidate>
+      <header class="dialog__head">
+        <p class="label">Admin</p>
+        <h2 id="admin-title">Reset a slot</h2>
+        <button type="button" class="icon-button" data-close aria-label="Close" data-icon="close"></button>
+      </header>
+      <div class="dialog__body">
+        <p class="hint">
+          Deletes the slot's group and ranking so it can be claimed again. Also reopens rankings
+          if the allocation has been revealed.
+        </p>
+        <div class="field">
+          <label for="admin-slot">Slot</label>
+          <select id="admin-slot"></select>
+        </div>
+        <div class="field">
+          <label for="admin-pin">Admin PIN</label>
+          <input id="admin-pin" type="password" autocomplete="off" required>
+        </div>
+        <p class="form-error" role="alert" data-error></p>
+      </div>
+      <footer class="dialog__actions">
+        <button type="button" class="btn btn--secondary" data-close>Cancel</button>
+        <button type="submit" class="btn btn--danger">Reset slot</button>
+      </footer>
+    </form>
+  </dialog>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Transfer copies of the SQL; the real files live in supabase/
+*.zip
+
+# Local secrets, if any are ever added (the publishable key in js/config.js is public by design)
+.env
+.env.*
+!.env.example
